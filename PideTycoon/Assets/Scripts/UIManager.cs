@@ -1,84 +1,95 @@
 using UnityEngine;
-using TMPro; // TextMeshPro kütüphanesi şart!
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
-    [Header("Ekran Bilgileri (Text Objelerini Sürükle)")]
-    public TextMeshProUGUI moneyText;       // Sol üstteki para yazısı
-    public TextMeshProUGUI currentPideText; // "Üretilen: Lahmacun" yazısı
-    public TextMeshProUGUI rebirthInfoText; // "Rebirth: 1.5x" yazısı
+    public static UIManager Instance { get; private set; }
 
-    [Header("Buton İçindeki Yazılar (Text Objelerini Sürükle)")]
-    public TextMeshProUGUI incomeButtonText;   // Gelir Butonunun içindeki Text
-    public TextMeshProUGUI speedButtonText;    // Hız Butonunun içindeki Text
-    public TextMeshProUGUI nextPideButtonText; // Yeni Pide Butonunun içindeki Text
+    [Header("Ana Ekran")]
+    public TextMeshProUGUI moneyText;
+    public TextMeshProUGUI currentPideText;
+    public TextMeshProUGUI rebirthInfoText;
+
+    [Header("Butonlar")]
+    public TextMeshProUGUI incomeButtonText;
+    public TextMeshProUGUI speedButtonText;
+    public TextMeshProUGUI nextPideButtonText;
+
+    [Header("Offline Kazanç Paneli")]
+    public GameObject offlinePanel;
+    public TextMeshProUGUI offlineTimeText;
+    public TextMeshProUGUI offlineEarningsText;
+    
+    private float pendingOfflineMoney = 0f;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
 
     private void Start()
     {
-        // GameManager hazır olduğunda bu fonksiyon çalışır
         if (GameManager.Instance != null)
         {
-            // GameManager'daki değişimleri dinlemeye başla
             GameManager.Instance.OnGameStateChanged += UpdateUI;
-
-            // Oyun açılır açılmaz ekranı bir kere güncelle
             UpdateUI();
         }
+        if(offlinePanel != null) offlinePanel.SetActive(false);
     }
 
     private void OnDestroy()
     {
-        // Script yok edilirse (sahne değişimi vb.) dinlemeyi bırak
-        // Bu yapılmazsa oyun hata verebilir.
         if (GameManager.Instance != null)
-        {
             GameManager.Instance.OnGameStateChanged -= UpdateUI;
+    }
+
+    // --- PANEL YÖNETİMİ ---
+    public void ShowOfflineRewardPanel(float moneyEarned, double secondsPassed)
+    {
+        pendingOfflineMoney = moneyEarned;
+        System.TimeSpan ts = System.TimeSpan.FromSeconds(secondsPassed);
+        string timeStr = string.Format("{0:D2}s {1:D2}dk {2:D2}sn", ts.Hours, ts.Minutes, ts.Seconds);
+
+        offlineTimeText.text = $"Dükkan {timeStr} çalıştı!";
+        offlineEarningsText.text = NumberFormatter.FormatNumber(moneyEarned);
+        
+        offlinePanel.SetActive(true);
+    }
+
+    public void CollectOfflineMoney()
+    {
+        if (pendingOfflineMoney > 0)
+        {
+            GameManager.Instance.AddMoney(pendingOfflineMoney);
+            pendingOfflineMoney = 0;
+            offlinePanel.SetActive(false);
         }
     }
 
-    // Ekranı Güncelleyen Ana Fonksiyon
+    // --- GÜNCELLEME ---
     private void UpdateUI()
     {
-        // Kod tekrarını önlemek için kısa referans
         var gm = GameManager.Instance;
-        if (gm == null) return; // Hata koruması
+        if (gm == null) return;
 
-        // --- 1. EKRAN BİLGİLERİ ---
-
-        // Parayı "1.50aa" formatında yaz (Helper scriptini kullanır)
         moneyText.text = NumberFormatter.FormatNumber(gm.money);
-
-        // Şu anki pide ismini yaz
+        
         var currentPide = gm.pideler[gm.currentPideIndex];
         currentPideText.text = "Üretilen: " + currentPide.isim;
-
-        // Rebirth Çarpanı
+        
         rebirthInfoText.text = "Rebirth: " + gm.globalRebirthMultiplier.ToString("F1") + "x";
 
+        incomeButtonText.text = NumberFormatter.FormatNumber(gm.incomeUpgrade.GetCost());
+        speedButtonText.text = NumberFormatter.FormatNumber(gm.speedUpgrade.GetCost());
 
-        // --- 2. BUTON YAZILARI ---
-
-        // Gelir Butonu (Sadece Fiyat)
-        float incomeCost = gm.incomeUpgrade.GetCost();
-        incomeButtonText.text = NumberFormatter.FormatNumber(incomeCost);
-
-        // Hız Butonu (Sadece Fiyat)
-        float speedCost = gm.speedUpgrade.GetCost();
-        speedButtonText.text = NumberFormatter.FormatNumber(speedCost);
-
-        // Yeni Pide Butonu (İsim + Fiyat)
         int nextIndex = gm.currentPideIndex + 1;
         if (nextIndex < gm.pideler.Count)
         {
             var nextPide = gm.pideler[nextIndex];
-            string fiyatStr = NumberFormatter.FormatNumber(nextPide.acilmaUcreti);
-            
-            // Alt alta İsim ve Fiyat yazar
-            nextPideButtonText.text = $"{fiyatStr}";
+            nextPideButtonText.text = $"{nextPide.isim}\n{NumberFormatter.FormatNumber(nextPide.acilmaUcreti)}";
         }
         else
         {
-            // Pide listesi bittiyse
             nextPideButtonText.text = "MAX";
         }
     }

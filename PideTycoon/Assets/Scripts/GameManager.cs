@@ -3,68 +3,55 @@ using System.Collections.Generic;
 using System;
 
 // --- YARDIMCI SINIFLAR ---
-
 [System.Serializable]
 public class UpgradeStat
 {
-    public string name;             // Örn: "Hız", "Lezzet"
-    public int level = 1;           // Başlangıç seviyesi
-    public float baseCost = 100f;   // İlk ücret
-    public float costMultiplier = 1.5f; // Fiyat artış katsayısı
-    public float powerMultiplier = 1.1f; // Her seviyede vereceği güç (%10 vb.)
+    public string name;
+    public int level = 1;
+    public float baseCost = 100f;
+    public float costMultiplier = 1.5f;
+    public float powerMultiplier = 1.1f;
 
-    // Şu anki seviyenin maliyetini hesapla
-    public float GetCost()
-    {
-        return baseCost * Mathf.Pow(costMultiplier, level - 1);
-    }
-
-    // Şu anki gücü hesapla
-    public float GetPower()
-    {
-        return Mathf.Pow(powerMultiplier, level - 1);
-    }
-
-    public void LevelUp() { level++; }
-    public void Reset() { level = 1; }
+    public float GetCost() => baseCost * Mathf.Pow(costMultiplier, level - 1);
+    public float GetPower() => Mathf.Pow(powerMultiplier, level - 1);
+    public void LevelUp() => level++;
+    public void Reset() => level = 1;
 }
 
 [System.Serializable]
 public struct PideInfo
 {
-    public string isim;         // Pide Adı
-    public float satisFiyati;   // Temel kazanç
-    public float acilmaUcreti;  // Tier atlama maliyeti
+    public string isim;
+    public float satisFiyati;
+    public float acilmaUcreti;
 }
 
-// --- ANA GAME MANAGER ---
-
+// --- ANA CLASS ---
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
     [Header("Oyun Verileri")]
-    public List<PideInfo> pideler; // Inspector'dan doldurulacak
+    public List<PideInfo> pideler;
 
     [Header("Yükseltmeler")]
-    public UpgradeStat incomeUpgrade; // 1. Buton: Gelir Artışı
-    public UpgradeStat speedUpgrade;  // 3. Buton: Hız Artışı
+    public UpgradeStat incomeUpgrade;
+    public UpgradeStat speedUpgrade;
 
     [Header("Rebirth Ayarları")]
-    [SerializeField] private float rebirthCost = 1000000f; // 1 Milyon
-    [SerializeField] private float rebirthMultiplierAdd = 0.5f; // Her rebirth +0.5x ekler
+    public float rebirthCost = 1000000f;
+    public float rebirthMultiplierAdd = 0.5f;
 
-    [Header("Durum (Sadece Okuma)")]
+    [Header("Durum (Read Only)")]
     public float money = 0f;
     public int currentPideIndex = 0;
     public int rebirthCount = 0;
-    public float globalRebirthMultiplier = 1f; // Tüm gelirleri çarpan ana değer
+    public float globalRebirthMultiplier = 1f;
 
-    // Usta (Otomatik Üretim) Değişkenleri
+    // Otomatik Üretim
     private float currentCookTimer = 0f;
-    private float baseCookTime = 3.0f; // Hiç upgrade yokken pişme süresi
+    private float baseCookTime = 3.0f;
 
-    // UI Güncelleme Eventi
     public event Action OnGameStateChanged;
 
     private void Awake()
@@ -78,56 +65,56 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
-    // --- OTOMATİK ÜRETİM DÖNGÜSÜ (USTA SİMÜLASYONU) ---
     private void Update()
     {
-        // 1. Pişirme süresini hesapla (Hız upgrade'ine göre azalır)
+        // Otomatik Pişirme Döngüsü
         float targetTime = baseCookTime / speedUpgrade.GetPower();
-
-        // 2. Zamanlayıcıyı ilerlet
         currentCookTimer += Time.deltaTime;
 
-        // 3. Süre doldu mu?
         if (currentCookTimer >= targetTime)
         {
-            currentCookTimer = 0f; // Sayacı sıfırla
-            SellPide(); // Parayı kazan
+            currentCookTimer = 0f;
+            SellPide();
         }
     }
 
-    // --- PARA KAZANMA MANTIĞI ---
     private void SellPide()
     {
         PideInfo currentPide = pideler[currentPideIndex];
-
-        // FORMÜL: PideFiyatı * GelirUpgrade * RebirthÇarpanı
         float income = currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier;
+        AddMoney(income);
+    }
 
-        money += income;
+    public void AddMoney(float amount)
+    {
+        money += amount;
         UpdateUI();
     }
 
     // --- BUTON FONKSİYONLARI ---
-
-    // 1. Buton: Gelir Yükseltmesi
     public void BuyIncomeUpgrade()
     {
-        float cost = incomeUpgrade.GetCost();
-        if (TrySpend(cost))
+        if (TrySpend(incomeUpgrade.GetCost()))
         {
             incomeUpgrade.LevelUp();
             UpdateUI();
         }
     }
 
-    // 2. Buton: Yeni Pide (Tier) Açma
+    public void BuySpeedUpgrade()
+    {
+        if (TrySpend(speedUpgrade.GetCost()))
+        {
+            speedUpgrade.LevelUp();
+            UpdateUI();
+        }
+    }
+
     public void BuyNextPide()
     {
-        // Son pidede miyiz?
         if (currentPideIndex + 1 >= pideler.Count) return;
-
         PideInfo nextPide = pideler[currentPideIndex + 1];
-        
+
         if (TrySpend(nextPide.acilmaUcreti))
         {
             currentPideIndex++;
@@ -135,69 +122,59 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // 3. Buton: Hız Yükseltmesi
-    public void BuySpeedUpgrade()
-    {
-        float cost = speedUpgrade.GetCost();
-        if (TrySpend(cost))
-        {
-            speedUpgrade.LevelUp();
-            UpdateUI();
-        }
-    }
-
-    // Rebirth Butonu
     public void DoRebirth()
     {
         if (money >= rebirthCost)
         {
             rebirthCount++;
-            
-            // Rebirth Çarpanını Arttır (Örn: 1.0 -> 1.5 -> 2.0)
             globalRebirthMultiplier += rebirthMultiplierAdd;
-
-            // OYUNU SIFIRLA (Soft Reset)
-            ResetGameProgress();
+            
+            // Sıfırlama
+            money = 0;
+            currentPideIndex = 0;
+            incomeUpgrade.Reset();
+            speedUpgrade.Reset();
+            currentCookTimer = 0f;
             
             UpdateUI();
         }
     }
 
-    // --- YARDIMCI METODLAR ---
-
+    // --- YARDIMCI VE SAVE SİSTEMİ İÇİN METODLAR ---
     private bool TrySpend(float amount)
     {
         if (money >= amount)
         {
             money -= amount;
+            UpdateUI();
             return true;
         }
         return false;
     }
 
-    private void ResetGameProgress()
-    {
-        money = 0;
-        currentPideIndex = 0; // Lahmacuna geri dön
-        
-        // Upgrade seviyelerini sıfırla
-        incomeUpgrade.Reset();
-        speedUpgrade.Reset();
+    private void UpdateUI() => OnGameStateChanged?.Invoke();
 
-        // Sayaçları sıfırla
-        currentCookTimer = 0f;
+    public float GetMoneyPerSecond()
+    {
+        PideInfo currentPide = pideler[currentPideIndex];
+        float onePideIncome = currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier;
+        float cookTime = baseCookTime / speedUpgrade.GetPower();
+        return onePideIncome / cookTime;
     }
 
-    private void UpdateUI()
+    public void LoadDataFromSave(float loadedMoney, int pideIndex, int rCount, float rMult)
     {
-        // UI Manager dinliyorsa tetikle
-        OnGameStateChanged?.Invoke();
+        money = loadedMoney;
+        currentPideIndex = pideIndex;
+        rebirthCount = rCount;
+        globalRebirthMultiplier = rMult;
+        UpdateUI();
     }
-    
-    // UI scriptinden progress bar yapmak istersen bu oranı çekebilirsin (0 ile 1 arası döner)
-    public float GetProductionProgress()
+
+    public void SetUpgradeLevels(int incomeLvl, int speedLvl)
     {
-        float targetTime = baseCookTime / speedUpgrade.GetPower();
-        return Mathf.Clamp01(currentCookTimer / targetTime);
+        incomeUpgrade.level = incomeLvl;
+        speedUpgrade.level = speedLvl;
+        UpdateUI();
     }
 }

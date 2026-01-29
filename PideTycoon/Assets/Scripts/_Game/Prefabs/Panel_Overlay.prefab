@@ -438,7 +438,7 @@ RectTransform:
   m_GameObject: {fileID: 8859276913225762634}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.6592001, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 847649356559056268}
@@ -476,7 +476,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: AYARLAR
+  m_text: "HO\u015EGELD\u0130N"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 995dcd9a2f2051e49beea17315d3cc20, type: 2}
   m_sharedMaterial: {fileID: 6090611123933381340, guid: 995dcd9a2f2051e49beea17315d3cc20, type: 2}
@@ -503,7 +503,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 41.85
+  m_fontSize: 33.7
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

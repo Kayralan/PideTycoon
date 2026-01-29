@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.IO;
+using System.Collections;
 
 [System.Serializable]
 public class SaveData
@@ -26,8 +27,9 @@ public class SaveManager : MonoBehaviour
         saveFilePath = Application.persistentDataPath + "/savefile.json";
     }
 
-    private void Start()
+    private IEnumerator Start()
     {
+        yield return new WaitForEndOfFrame();
         LoadGame();
     }
 
@@ -48,7 +50,6 @@ public class SaveManager : MonoBehaviour
         data.lastQuitTime = DateTime.Now.ToBinary().ToString();
 
         File.WriteAllText(saveFilePath, JsonUtility.ToJson(data));
-        // Debug.Log("Oyun Kaydedildi.");
     }
 
     public void LoadGame()
@@ -74,14 +75,18 @@ public class SaveManager : MonoBehaviour
         DateTime oldTime = DateTime.FromBinary(temp);
         double secondsPassed = (DateTime.Now - oldTime).TotalSeconds;
 
-        if (secondsPassed < 60) return; // En az 60 saniye geçmeli
+        if (secondsPassed < 60) return; // En az 60 saniye yoksa verme
 
         float moneyPerSecond = GameManager.Instance.GetMoneyPerSecond();
         float offlineEarnings = moneyPerSecond * (float)secondsPassed;
 
-        if (offlineEarnings > 0 && UIManager.Instance != null)
+        if (offlineEarnings > 0)
         {
-            UIManager.Instance.ShowOfflineRewardPanel(offlineEarnings, secondsPassed);
+            // DEĞİŞİKLİK BURADA:
+            // Paneli açmak yerine parayı direkt ekliyoruz.
+            GameManager.Instance.AddMoney(offlineEarnings);
+            
+            Debug.Log($"Offline Kazanç Eklendi: {NumberFormatter.FormatNumber(offlineEarnings)} ({secondsPassed:F0} saniye)");
         }
     }
 }

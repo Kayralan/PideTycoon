@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
-// --- YARDIMCI SINIFLAR ---
 [System.Serializable]
 public class UpgradeStat
 {
@@ -26,15 +25,12 @@ public struct PideInfo
     public float acilmaUcreti;
 }
 
-// --- ANA CLASS ---
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
     [Header("Oyun Verileri")]
     public List<PideInfo> pideler;
-
-    [Header("Yükseltmeler")]
     public UpgradeStat incomeUpgrade;
     public UpgradeStat speedUpgrade;
 
@@ -48,7 +44,11 @@ public class GameManager : MonoBehaviour
     public int rebirthCount = 0;
     public float globalRebirthMultiplier = 1f;
 
-    // Otomatik Üretim
+    // --- PİŞİRME DURUMLARI ---
+    [Header("Üretim Takibi")]
+    public bool isCooking = false;
+    public bool isPideReady = false;
+    
     private float currentCookTimer = 0f;
     private float baseCookTime = 3.0f;
 
@@ -67,18 +67,48 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        // Otomatik Pişirme Döngüsü
-        float targetTime = baseCookTime / speedUpgrade.GetPower();
-        currentCookTimer += Time.deltaTime;
-
-        if (currentCookTimer >= targetTime)
+        // Usta pişiriyorsa ve pide henüz hazır değilse süreyi işlet
+        if (isCooking && !isPideReady)
         {
-            currentCookTimer = 0f;
-            SellPide();
+            float targetTime = baseCookTime / speedUpgrade.GetPower();
+            currentCookTimer += Time.deltaTime;
+
+            if (currentCookTimer >= targetTime)
+            {
+                // Pide Pişti!
+                currentCookTimer = 0f;
+                isCooking = false;
+                isPideReady = true;
+                Debug.Log("Pide Tezgaha Kondu!");
+            }
         }
     }
 
-    private void SellPide()
+    // --- MÜŞTERİ ETKİLEŞİMLERİ ---
+
+    // 1. Müşteri masaya oturunca ustayı tetikler
+    public void StartCookingProcess()
+    {
+        // Eğer usta boşsa ve tezgahta pide yoksa pişirmeye başla
+        if (!isCooking && !isPideReady)
+        {
+            isCooking = true;
+            currentCookTimer = 0f;
+        }
+    }
+
+    // 2. Müşteri pideyi tezgahtan alınca
+    public void CustomerTookPide()
+    {
+        if (isPideReady)
+        {
+            isPideReady = false;
+            // Tezgah boşaldı.
+        }
+    }
+
+    // 3. Müşteri yemeği bitirip ödeme yapınca
+    public void SellPide()
     {
         PideInfo currentPide = pideler[currentPideIndex];
         float income = currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier;
@@ -91,35 +121,22 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
-    // --- BUTON FONKSİYONLARI ---
+    // --- BUTON İŞLEMLERİ ---
     public void BuyIncomeUpgrade()
     {
-        if (TrySpend(incomeUpgrade.GetCost()))
-        {
-            incomeUpgrade.LevelUp();
-            UpdateUI();
-        }
+        if (TrySpend(incomeUpgrade.GetCost())) { incomeUpgrade.LevelUp(); UpdateUI(); }
     }
 
     public void BuySpeedUpgrade()
     {
-        if (TrySpend(speedUpgrade.GetCost()))
-        {
-            speedUpgrade.LevelUp();
-            UpdateUI();
-        }
+        if (TrySpend(speedUpgrade.GetCost())) { speedUpgrade.LevelUp(); UpdateUI(); }
     }
 
     public void BuyNextPide()
     {
         if (currentPideIndex + 1 >= pideler.Count) return;
         PideInfo nextPide = pideler[currentPideIndex + 1];
-
-        if (TrySpend(nextPide.acilmaUcreti))
-        {
-            currentPideIndex++;
-            UpdateUI();
-        }
+        if (TrySpend(nextPide.acilmaUcreti)) { currentPideIndex++; UpdateUI(); }
     }
 
     public void DoRebirth()
@@ -128,38 +145,32 @@ public class GameManager : MonoBehaviour
         {
             rebirthCount++;
             globalRebirthMultiplier += rebirthMultiplierAdd;
-            
-            // Sıfırlama
             money = 0;
             currentPideIndex = 0;
             incomeUpgrade.Reset();
             speedUpgrade.Reset();
-            currentCookTimer = 0f;
-            
+            isCooking = false;
+            isPideReady = false;
             UpdateUI();
         }
     }
 
-    // --- YARDIMCI VE SAVE SİSTEMİ İÇİN METODLAR ---
+    // --- YARDIMCI VE SAVE FONKSİYONLARI ---
     private bool TrySpend(float amount)
     {
-        if (money >= amount)
-        {
-            money -= amount;
-            UpdateUI();
-            return true;
-        }
+        if (money >= amount) { money -= amount; UpdateUI(); return true; }
         return false;
     }
 
     private void UpdateUI() => OnGameStateChanged?.Invoke();
 
+    // Offline kazanç için teorik hız (Müşterisiz)
     public float GetMoneyPerSecond()
     {
         PideInfo currentPide = pideler[currentPideIndex];
         float onePideIncome = currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier;
         float cookTime = baseCookTime / speedUpgrade.GetPower();
-        return onePideIncome / cookTime;
+        return onePideIncome / cookTime; // Saniyede kazanılan teorik para
     }
 
     public void LoadDataFromSave(float loadedMoney, int pideIndex, int rCount, float rMult)

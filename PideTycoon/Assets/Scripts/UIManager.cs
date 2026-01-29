@@ -15,12 +15,8 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI speedButtonText;
     public TextMeshProUGUI nextPideButtonText;
 
-    [Header("Offline Kazanç Paneli")]
-    public GameObject offlinePanel;
-    public TextMeshProUGUI offlineTimeText;
-    public TextMeshProUGUI offlineEarningsText;
-    
-    private float pendingOfflineMoney = 0f;
+    // Offline Panel değişkenlerini sildik çünkü kullanmıyoruz.
+    // Artık Inspector'da boş kalsalar bile hata vermezler.
 
     private void Awake()
     {
@@ -34,7 +30,6 @@ public class UIManager : MonoBehaviour
             GameManager.Instance.OnGameStateChanged += UpdateUI;
             UpdateUI();
         }
-        if(offlinePanel != null) offlinePanel.SetActive(false);
     }
 
     private void OnDestroy()
@@ -43,42 +38,24 @@ public class UIManager : MonoBehaviour
             GameManager.Instance.OnGameStateChanged -= UpdateUI;
     }
 
-    // --- PANEL YÖNETİMİ ---
-    public void ShowOfflineRewardPanel(float moneyEarned, double secondsPassed)
-    {
-        pendingOfflineMoney = moneyEarned;
-        System.TimeSpan ts = System.TimeSpan.FromSeconds(secondsPassed);
-        string timeStr = string.Format("{0:D2}s {1:D2}dk {2:D2}sn", ts.Hours, ts.Minutes, ts.Seconds);
+    // ShowOfflineRewardPanel ve CollectOfflineMoney fonksiyonlarını sildik.
 
-        offlineTimeText.text = $"Dükkan {timeStr} çalıştı!";
-        offlineEarningsText.text = NumberFormatter.FormatNumber(moneyEarned);
-        
-        offlinePanel.SetActive(true);
-    }
-
-    public void CollectOfflineMoney()
-    {
-        if (pendingOfflineMoney > 0)
-        {
-            GameManager.Instance.AddMoney(pendingOfflineMoney);
-            pendingOfflineMoney = 0;
-            offlinePanel.SetActive(false);
-        }
-    }
-
-    // --- GÜNCELLEME ---
     private void UpdateUI()
     {
         var gm = GameManager.Instance;
         if (gm == null) return;
 
+        // Para yazısını güncelle
         moneyText.text = NumberFormatter.FormatNumber(gm.money);
         
+        // Pide yazısını güncelle
         var currentPide = gm.pideler[gm.currentPideIndex];
         currentPideText.text = "Üretilen: " + currentPide.isim;
         
+        // Rebirth yazısını güncelle
         rebirthInfoText.text = "Rebirth: " + gm.globalRebirthMultiplier.ToString("F1") + "x";
 
+        // Butonları güncelle
         incomeButtonText.text = NumberFormatter.FormatNumber(gm.incomeUpgrade.GetCost());
         speedButtonText.text = NumberFormatter.FormatNumber(gm.speedUpgrade.GetCost());
 

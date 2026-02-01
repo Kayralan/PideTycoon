@@ -8,7 +8,7 @@ public class UpgradeStat
     public string name;
     public int level = 1;
     public float baseCost = 100f;
-    public float costMultiplier = 1.5f;
+    public float costMultiplier = 1.24f;
     public float powerMultiplier = 1.1f;
 
     public float GetCost() => baseCost * Mathf.Pow(costMultiplier, level - 1);
@@ -21,8 +21,8 @@ public class UpgradeStat
 public struct PideInfo
 {
     public string isim;
-    public float satisFiyati;
-    public float acilmaUcreti;
+    public double satisFiyati;
+    public double acilmaUcreti;
 }
 
 public class GameManager : MonoBehaviour
@@ -69,19 +69,24 @@ public class GameManager : MonoBehaviour
     {
         // Usta pişiriyorsa ve pide henüz hazır değilse süreyi işlet
         if (isCooking && !isPideReady)
-        {
-            float targetTime = baseCookTime / speedUpgrade.GetPower();
-            currentCookTimer += Time.deltaTime;
+    {
+        // Hedef süreyi hesapla
+        float power = speedUpgrade.GetPower();
+        float targetTime = baseCookTime / power;
 
-            if (currentCookTimer >= targetTime)
-            {
-                // Pide Pişti!
-                currentCookTimer = 0f;
-                isCooking = false;
-                isPideReady = true;
-                Debug.Log("Pide Tezgaha Kondu!");
-            }
+        // KONSOLA YAZDIR (Test için):
+         Debug.Log($"Seviye: {speedUpgrade.level} | Güç: {power} | Hedef Süre: {targetTime}");
+
+        currentCookTimer += Time.deltaTime;
+
+        if (currentCookTimer >= targetTime)
+        {
+            currentCookTimer = 0f;
+            isCooking = false;
+            isPideReady = true;
+            Debug.Log("Pide Tezgaha Kondu!");
         }
+    }
     }
 
     // --- MÜŞTERİ ETKİLEŞİMLERİ ---
@@ -111,7 +116,7 @@ public class GameManager : MonoBehaviour
     public void SellPide()
     {
         PideInfo currentPide = pideler[currentPideIndex];
-        float income = currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier;
+        float income = (float)(currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier);
         AddMoney(income);
     }
 
@@ -136,7 +141,7 @@ public class GameManager : MonoBehaviour
     {
         if (currentPideIndex + 1 >= pideler.Count) return;
         PideInfo nextPide = pideler[currentPideIndex + 1];
-        if (TrySpend(nextPide.acilmaUcreti)) { currentPideIndex++; UpdateUI(); }
+        if (TrySpend((float)nextPide.acilmaUcreti)) { currentPideIndex++; UpdateUI(); }
     }
 
     public void DoRebirth()
@@ -168,7 +173,7 @@ public class GameManager : MonoBehaviour
     public float GetMoneyPerSecond()
     {
         PideInfo currentPide = pideler[currentPideIndex];
-        float onePideIncome = currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier;
+        float onePideIncome = (float)(currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier);
         float cookTime = baseCookTime / speedUpgrade.GetPower();
         return onePideIncome / cookTime; // Saniyede kazanılan teorik para
     }

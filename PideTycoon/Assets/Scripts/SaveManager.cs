@@ -20,6 +20,9 @@ public class SaveManager : MonoBehaviour
     public static SaveManager Instance { get; private set; }
     private string saveFilePath;
 
+    // AYAR: Maksimum kaç saniye kazanç biriksin? (4 Saat = 14400 sn)
+    private const double MAX_OFFLINE_SECONDS = 14400; 
+
     private void Awake()
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
@@ -73,20 +76,22 @@ public class SaveManager : MonoBehaviour
 
         long temp = Convert.ToInt64(lastTimeStr);
         DateTime oldTime = DateTime.FromBinary(temp);
-        double secondsPassed = (DateTime.Now - oldTime).TotalSeconds;
+        
+        // Gerçekte geçen süre
+        double realSecondsPassed = (DateTime.Now - oldTime).TotalSeconds;
 
-        if (secondsPassed < 60) return; // En az 60 saniye yoksa verme
+        if (realSecondsPassed < 60) return; // 1 dakikadan azsa hiç gösterme
+
+        // Hesaplamada kullanılacak süre (Max 4 saat sınırı)
+        double cappedSeconds = Math.Min(realSecondsPassed, MAX_OFFLINE_SECONDS);
 
         float moneyPerSecond = GameManager.Instance.GetMoneyPerSecond();
-        float offlineEarnings = moneyPerSecond * (float)secondsPassed;
+        float offlineEarnings = moneyPerSecond * (float)cappedSeconds;
 
-        if (offlineEarnings > 0)
+        if (offlineEarnings > 0 && UIManager.Instance != null)
         {
-            // DEĞİŞİKLİK BURADA:
-            // Paneli açmak yerine parayı direkt ekliyoruz.
-            GameManager.Instance.AddMoney(offlineEarnings);
-            
-            Debug.Log($"Offline Kazanç Eklendi: {NumberFormatter.FormatNumber(offlineEarnings)} ({secondsPassed:F0} saniye)");
+            // UI'a hem kazanılan parayı, hem de gerçekte geçen süreyi gönderiyoruz
+            UIManager.Instance.ShowOfflineRewardPanel(offlineEarnings, realSecondsPassed);
         }
     }
 }

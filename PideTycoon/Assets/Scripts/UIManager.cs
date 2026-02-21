@@ -89,7 +89,7 @@ public class UIManager : MonoBehaviour
         moneyText.text = NumberFormatter.FormatNumber(gm.money);
         var currentPide = gm.pideler[gm.currentPideIndex];
         currentPideText.text = "Üretilen: " + currentPide.isim;
-        rebirthInfoText.text = "Rebirth: " + gm.globalRebirthMultiplier.ToString("F1") + "x";
+        rebirthInfoText.text =  gm.globalRebirthMultiplier.ToString("F1") + "x";
 
         incomeButtonText.text = NumberFormatter.FormatNumber(gm.incomeUpgrade.GetCost());
         speedButtonText.text = NumberFormatter.FormatNumber(gm.speedUpgrade.GetCost());
@@ -98,7 +98,7 @@ public class UIManager : MonoBehaviour
         if (nextIndex < gm.pideler.Count)
         {
             var nextPide = gm.pideler[nextIndex];
-            nextPideButtonText.text = $"{nextPide.isim}\n{NumberFormatter.FormatNumber((float)nextPide.acilmaUcreti)}";
+            nextPideButtonText.text =NumberFormatter.FormatNumber((float)nextPide.acilmaUcreti);
         }
         else
         {

@@ -28,6 +28,12 @@ public struct PideInfo
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    
+    [Header("Audio")]
+    public AudioClip cookSfx;
+
+    [Header("UI Panels")]
+    public GameObject rebirthPanel; // Rebirth panelini buraya sürükleyeceğiz
 
     [Header("Oyun Verileri")]
     public List<PideInfo> pideler;
@@ -62,57 +68,53 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        // Oyun başladığında Rebirth paneli ekranda kalmasın diye gizliyoruz
+        if (rebirthPanel != null) rebirthPanel.SetActive(false);
+        
         UpdateUI();
     }
 
     private void Update()
     {
-        // Usta pişiriyorsa ve pide henüz hazır değilse süreyi işlet
         if (isCooking && !isPideReady)
-    {
-        // Hedef süreyi hesapla
-        float power = speedUpgrade.GetPower();
-        float targetTime = baseCookTime / power;
-
-        // KONSOLA YAZDIR (Test için):
-         Debug.Log($"Seviye: {speedUpgrade.level} | Güç: {power} | Hedef Süre: {targetTime}");
-
-        currentCookTimer += Time.deltaTime;
-
-        if (currentCookTimer >= targetTime)
         {
-            currentCookTimer = 0f;
-            isCooking = false;
-            isPideReady = true;
-            Debug.Log("Pide Tezgaha Kondu!");
+            float power = speedUpgrade.GetPower();
+            float targetTime = baseCookTime / power;
+
+            currentCookTimer += Time.deltaTime;
+
+            if (currentCookTimer >= targetTime)
+            {
+                currentCookTimer = 0f;
+                isCooking = false;
+                isPideReady = true;
+            }
         }
     }
-    }
 
-    // --- MÜŞTERİ ETKİLEŞİMLERİ ---
-
-    // 1. Müşteri masaya oturunca ustayı tetikler
     public void StartCookingProcess()
     {
-        // Eğer usta boşsa ve tezgahta pide yoksa pişirmeye başla
         if (!isCooking && !isPideReady)
         {
             isCooking = true;
             currentCookTimer = 0f;
+            
+            // Pişirme sesi fırın yandığında çıksın
+            if (cookSfx != null && AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySFX(cookSfx);
+            }
         }
     }
 
-    // 2. Müşteri pideyi tezgahtan alınca
     public void CustomerTookPide()
     {
         if (isPideReady)
         {
             isPideReady = false;
-            // Tezgah boşaldı.
         }
     }
 
-    // 3. Müşteri yemeği bitirip ödeme yapınca
     public void SellPide()
     {
         PideInfo currentPide = pideler[currentPideIndex];
@@ -126,7 +128,6 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
-    // --- BUTON İŞLEMLERİ ---
     public void BuyIncomeUpgrade()
     {
         if (TrySpend(incomeUpgrade.GetCost())) { incomeUpgrade.LevelUp(); UpdateUI(); }
@@ -157,6 +158,26 @@ public class GameManager : MonoBehaviour
             isCooking = false;
             isPideReady = false;
             UpdateUI();
+            
+            // İsteğe bağlı: Rebirth yaptıktan sonra paneli otomatik kapatmak istersen burayı aktif edebilirsin
+            // CloseRebirthPanel(); 
+        }
+    }
+
+    // --- PANEL KONTROL FONKSİYONLARI ---
+    public void OpenRebirthPanel()
+    {
+        if (rebirthPanel != null)
+        {
+            rebirthPanel.SetActive(true);
+        }
+    }
+
+    public void CloseRebirthPanel()
+    {
+        if (rebirthPanel != null)
+        {
+            rebirthPanel.SetActive(false);
         }
     }
 
@@ -169,13 +190,12 @@ public class GameManager : MonoBehaviour
 
     private void UpdateUI() => OnGameStateChanged?.Invoke();
 
-    // Offline kazanç için teorik hız (Müşterisiz)
     public float GetMoneyPerSecond()
     {
         PideInfo currentPide = pideler[currentPideIndex];
         float onePideIncome = (float)(currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier);
         float cookTime = baseCookTime / speedUpgrade.GetPower();
-        return onePideIncome / cookTime; // Saniyede kazanılan teorik para
+        return onePideIncome / cookTime;
     }
 
     public void LoadDataFromSave(float loadedMoney, int pideIndex, int rCount, float rMult)

@@ -97,6 +97,7 @@ public class GameManager : MonoBehaviour
         if (!isCooking && !isPideReady)
         {
             isCooking = true;
+            ChefController.Instance.SetCooking();
             currentCookTimer = 0f;
             
             // Pişirme sesi fırın yandığında çıksın
@@ -111,6 +112,7 @@ public class GameManager : MonoBehaviour
     {
         if (isPideReady)
         {
+            ChefController.Instance.SetIdle();
             isPideReady = false;
         }
     }

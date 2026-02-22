@@ -2,12 +2,42 @@ using UnityEngine;
 
 public class ChefController : MonoBehaviour
 {
-    // Şimdilik animasyon yok, sadece kodun hata vermesini engellemek için
-    // boş bıraktık. İleride buraya animasyon kodları gelecek.
+    // Her yerden kolayca ulaşmak için Singleton yapıyoruz
+    public static ChefController Instance;
 
-    private void Update()
+    [Header("Usta Görselleri")]
+    public SpriteRenderer spriteRenderer;
+    public Sprite idleSprite;    // Bize bakan, bekleyen usta
+    public Sprite cookingSprite; // Arkası dönük, fırına pide atan usta
+
+    private void Awake()
     {
-        // Debug amaçlı konsola yazdırabilirsin istersen:
-         if (GameManager.Instance.isCooking) Debug.Log("Usta Pişiriyor...");
+        if (Instance == null) Instance = this;
+    }
+
+    private void Start()
+    {
+        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        
+        // Oyun başladığında usta boşta dursun
+        SetIdle(); 
+    }
+
+    // Usta boşa geçtiğinde bu çalışacak
+    public void SetIdle()
+    {
+        if (spriteRenderer != null && idleSprite != null)
+        {
+            spriteRenderer.sprite = idleSprite;
+        }
+    }
+
+    // Pide pişmeye başladığında bu çalışacak
+    public void SetCooking()
+    {
+        if (spriteRenderer != null && cookingSprite != null)
+        {
+            spriteRenderer.sprite = cookingSprite;
+        }
     }
 }

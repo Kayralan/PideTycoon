@@ -161,7 +161,7 @@ public class CustomerController : MonoBehaviour
             sr.sprite = secilenPide;
 
             // PNG'ler büyükse diye bir küçültme ayarı (Eğer küçük görünürse buradaki 0.5f'leri 1f yapabilirsin)
-            masadakiPideObjesi.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            masadakiPideObjesi.transform.localScale = new Vector3(20f, 20f, 20f);
             
             // Masanın açısına göre pideyi yatırıp estetik durmasını istersen rotasyon da ekleyebiliriz ama 2D olduğu için genelde düz durması iyidir.
         }

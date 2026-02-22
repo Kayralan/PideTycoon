@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6336200199292128262}
   - component: {fileID: 4489298576860442719}
   - component: {fileID: 8206480844420910428}
+  - component: {fileID: 6027439067262880869}
   m_Layer: 0
   m_Name: Customer
   m_TagString: Untagged
@@ -135,7 +136,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CustomerController
   moveSpeed: 100
-  eatingDuration: 2
+  eatingDuration: 3
+  modelTersMi: 1
+  pideSprites:
+  - {fileID: 855351679731653779, guid: 686d8b526808126428044406551bb99d, type: 3}
+  - {fileID: -3546798266909641997, guid: abd1b4a1332477a419c6f106cd5f6f4a, type: 3}
+  - {fileID: -5848012714436888436, guid: 83b314ec5e17e4e43b727372c1cb32bc, type: 3}
+  - {fileID: 5306529320305487680, guid: 4def35b3717608e48a9894de5e899d94, type: 3}
+  - {fileID: -387225353220423857, guid: 4f43cb0de5807294dbf65f5ccfbbdf88, type: 3}
+  anim: {fileID: 0}
 --- !u!61 &8206480844420910428
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -182,6 +191,28 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 2}
   m_EdgeRadius: 0
+--- !u!95 &6027439067262880869
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8544119451212612300}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 10b225a60dabf964daae957948623b12, type: 2}
+  m_Controller: {fileID: 9100000, guid: 6ee1d2e7aa88c0349a0002e2dc777ae9, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &8871955908013401580
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -33,7 +33,8 @@ public class GameManager : MonoBehaviour
     public AudioClip cookSfx;
 
     [Header("UI Panels")]
-    public GameObject rebirthPanel; // Rebirth panelini buraya sürükleyeceğiz
+    public GameObject rebirthPanel; 
+    public GameObject rebirthButton; // YENİ EKLENDİ: Paramız yetince belirecek olan buton
 
     [Header("Oyun Verileri")]
     public List<PideInfo> pideler;
@@ -68,8 +69,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Oyun başladığında Rebirth paneli ekranda kalmasın diye gizliyoruz
         if (rebirthPanel != null) rebirthPanel.SetActive(false);
+        if (rebirthButton != null) rebirthButton.SetActive(false); // Oyun başlarken butonu gizle
         
         UpdateUI();
     }
@@ -100,11 +101,7 @@ public class GameManager : MonoBehaviour
             ChefController.Instance.SetCooking();
             currentCookTimer = 0f;
             
-            // Pişirme sesi fırın yandığında çıksın
-            if (cookSfx != null && AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlaySFX(cookSfx);
-            }
+            
         }
     }
 
@@ -122,6 +119,10 @@ public class GameManager : MonoBehaviour
         PideInfo currentPide = pideler[currentPideIndex];
         float income = (float)(currentPide.satisFiyati * incomeUpgrade.GetPower() * globalRebirthMultiplier);
         AddMoney(income);
+        if (cookSfx != null && AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySFX(cookSfx);
+            }
     }
 
     public void AddMoney(float amount)
@@ -159,38 +160,44 @@ public class GameManager : MonoBehaviour
             speedUpgrade.Reset();
             isCooking = false;
             isPideReady = false;
+            
+            // Eğer Ustan fırına dönük kaldıysa onu da eski haline getirelim
+            if (ChefController.Instance != null) ChefController.Instance.SetIdle();
+
             UpdateUI();
             
-            // İsteğe bağlı: Rebirth yaptıktan sonra paneli otomatik kapatmak istersen burayı aktif edebilirsin
-            // CloseRebirthPanel(); 
+            // Rebirth yaptıktan sonra paneli otomatik kapatmak istersen
+            CloseRebirthPanel(); 
         }
     }
 
-    // --- PANEL KONTROL FONKSİYONLARI ---
     public void OpenRebirthPanel()
     {
-        if (rebirthPanel != null)
-        {
-            rebirthPanel.SetActive(true);
-        }
+        if (rebirthPanel != null) rebirthPanel.SetActive(true);
     }
 
     public void CloseRebirthPanel()
     {
-        if (rebirthPanel != null)
-        {
-            rebirthPanel.SetActive(false);
-        }
+        if (rebirthPanel != null) rebirthPanel.SetActive(false);
     }
 
-    // --- YARDIMCI VE SAVE FONKSİYONLARI ---
     private bool TrySpend(float amount)
     {
         if (money >= amount) { money -= amount; UpdateUI(); return true; }
         return false;
     }
 
-    private void UpdateUI() => OnGameStateChanged?.Invoke();
+    // YENİ EKLENDİ: Arayüz her güncellendiğinde Rebirth butonunu kontrol et
+    private void UpdateUI() 
+    {
+        if (rebirthButton != null)
+        {
+            // Paramız rebirth ücretinden büyük veya eşitse butonu göster, değilse gizle
+            rebirthButton.SetActive(money >= rebirthCost);
+        }
+
+        OnGameStateChanged?.Invoke();
+    }
 
     public float GetMoneyPerSecond()
     {

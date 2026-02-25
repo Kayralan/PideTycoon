@@ -42,8 +42,23 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: characters
+  - name: Duvar
     uniqueID: 3601537715
+    locked: 0
+  - name: "f\u0131r\u0131n"
+    uniqueID: 2865899329
+    locked: 0
+  - name: zemin
+    uniqueID: 2129751957
+    locked: 0
+  - name: usta
+    uniqueID: 1113961025
+    locked: 0
+  - name: "m\xFC\u015Fteri"
+    uniqueID: 2965931567
+    locked: 0
+  - name: UI
+    uniqueID: 2526901271
     locked: 0
   m_RenderingLayers:
   - Default

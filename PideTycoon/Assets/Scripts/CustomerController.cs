@@ -158,6 +158,7 @@ public class CustomerController : MonoBehaviour
             
             // Objeye resmi ekle
             SpriteRenderer sr = masadakiPideObjesi.AddComponent<SpriteRenderer>();
+            sr.sortingLayerName = "usta";
             sr.sprite = secilenPide;
 
             // PNG'ler büyükse diye bir küçültme ayarı (Eğer küçük görünürse buradaki 0.5f'leri 1f yapabilirsin)

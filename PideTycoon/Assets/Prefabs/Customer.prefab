@@ -139,7 +139,6 @@ MonoBehaviour:
   eatingDuration: 3
   modelTersMi: 1
   pideSprites:
-  - {fileID: 855351679731653779, guid: 686d8b526808126428044406551bb99d, type: 3}
   - {fileID: -3546798266909641997, guid: abd1b4a1332477a419c6f106cd5f6f4a, type: 3}
   - {fileID: -5848012714436888436, guid: 83b314ec5e17e4e43b727372c1cb32bc, type: 3}
   - {fileID: 5306529320305487680, guid: 4def35b3717608e48a9894de5e899d94, type: 3}
